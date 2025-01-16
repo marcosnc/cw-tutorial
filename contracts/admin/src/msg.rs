@@ -15,11 +15,6 @@ pub enum ExecuteMsg {
 }
 
 #[cw_serde]
-pub struct GreetResp {
-    pub message: String,
-}
-
-#[cw_serde]
 pub struct AdminsListResp  {
     pub admins: Vec<Addr>,
 }
@@ -27,8 +22,6 @@ pub struct AdminsListResp  {
 #[cw_serde]
 #[derive(QueryResponses)]
 pub enum QueryMsg {
-    #[returns(GreetResp)]
-    Greet {},
     #[returns(AdminsListResp)]
     AdminsList {},    
 }

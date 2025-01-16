@@ -1,4 +1,4 @@
-use contract::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use admin::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use cosmwasm_schema::write_api;
 
 fn main() {

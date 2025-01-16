@@ -5,19 +5,6 @@
     {
       "type": "object",
       "required": [
-        "greet"
-      ],
-      "properties": {
-        "greet": {
-          "type": "object",
-          "additionalProperties": false
-        }
-      },
-      "additionalProperties": false
-    },
-    {
-      "type": "object",
-      "required": [
         "admins_list"
       ],
       "properties": {
