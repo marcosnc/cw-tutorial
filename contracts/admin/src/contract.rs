@@ -2,48 +2,51 @@ use crate::error::ContractError;
 use crate::msg::{AdminsListResp, ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::state::{ADMINS, DONATION_DENOM};
 use cosmwasm_std::{
-    coins, to_json_binary, BankMsg, Binary, Deps, DepsMut, Empty, Env, Event, MessageInfo, Order, Response, StdResult,
+    coins, to_json_binary, BankMsg, Binary, Deps, DepsMut, Env, Event, MessageInfo, Order, Response, StdResult
 };
 
 pub fn instantiate(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     _info: MessageInfo,
     msg: InstantiateMsg,
 ) -> StdResult<Response> {
     for addr in msg.admins {
         let admin = deps.api.addr_validate(&addr)?;
-        ADMINS.save(deps.storage, &admin, &Empty {})?;
+        ADMINS.save(deps.storage, &admin, &env.block.time)?;
     }
     DONATION_DENOM.save(deps.storage, &msg.donation_denom)?;
 
     Ok(Response::new())
 }
 
-pub fn query(_deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
+pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     use QueryMsg::*;
 
     match msg {
-        AdminsList {} => to_json_binary(&query::admins_list(_deps)?),
+        AdminsList {} => to_json_binary(&query::admins_list(deps)?),
+        JoinTime { admin } => to_json_binary(&query::join_time(deps, admin)?),
     }
 }
 
 pub fn execute(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     info: MessageInfo,
     _msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     use ExecuteMsg::*;
 
     match _msg {
-        AddMembers { admins } => exec::add_members(deps, info, admins),
+        AddMembers { admins } => exec::add_members(deps, env, info, admins),
         Leave {} => exec::leave(deps, info).map_err(Into::into),
         Donate {} => exec::donate(deps, info),
     }
 }
 
 mod query {
+    use crate::msg::JoinTimeResp;
+
     use super::*;
 
     pub fn admins_list(deps: Deps) -> StdResult<AdminsListResp> {
@@ -54,6 +57,11 @@ mod query {
         let resp = AdminsListResp { admins };
         Ok(resp)
     }    
+
+    pub fn join_time(deps: Deps, admin: String) -> StdResult<JoinTimeResp> {
+        let joined = ADMINS.load(deps.storage, &deps.api.addr_validate(&admin)?)?;
+        Ok(JoinTimeResp { joined })
+    }    
 }
 
 mod exec {
@@ -61,6 +69,7 @@ mod exec {
 
     pub fn add_members(
         deps: DepsMut,
+        env: Env,
         info: MessageInfo,
         admins: Vec<String>,
     ) -> Result<Response, ContractError> {
@@ -80,7 +89,7 @@ mod exec {
 
         for addr in admins {
             let admin = deps.api.addr_validate(&addr)?;
-            ADMINS.save(deps.storage, &admin, &Empty {})?;
+            ADMINS.save(deps.storage, &admin, &env.block.time)?;
         }            
 
         Ok(resp)
